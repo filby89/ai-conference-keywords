@@ -20,6 +20,19 @@ def parse_opts():
 
 	return args
 
+def find_keywords(paper_titles, keywords):
+	found_list = []
+	for title in paper_titles:
+		found = 0
+		for keyword in keywords:
+			if title.lower().find(keyword) >= 0:
+				found = 1
+				break
+		found_list.append(found)
+
+	return found_list
+
+
 
 def parse_thecvf(conference, keywords):
 	response = requests.get("http://openaccess.thecvf.com/"+conference+".py")
@@ -28,9 +41,7 @@ def parse_thecvf(conference, keywords):
 
 	paper_titles = [paper.find("a").text for paper in papers]
 
-	found = [1 if paper.lower().find(keyword) >= 0 else 0 for keyword in keywords for paper in paper_titles]
-
-	return found
+	return find_keywords(paper_titles, keywords)
 
 def parse_icml(conference, keywords):
 	icml_to_vol = {
@@ -46,11 +57,10 @@ def parse_icml(conference, keywords):
 	tree = html.fromstring(response.text) # get html tree
 	papers = tree.find_class('paper') 
 
-	paper_titles = [paper.find_class("a")[0].text for paper in papers]
+	paper_titles = [paper.find_class("title")[0].text for paper in papers]
 
-	found = [1 if paper.lower().find(keyword) >= 0 else 0 for keyword in keywords for paper in paper_titles]
+	return find_keywords(paper_titles, keywords)
 
-	return found
 
 def parse_nips(conference, keywords):
 	nips_to_vol = {
@@ -68,9 +78,7 @@ def parse_nips(conference, keywords):
 
 	paper_titles = [x.text for x in all_links if "/paper/" in x.get("href") ]
 
-	found = [1 if paper.lower().find(keyword) >= 0 else 0 for keyword in keywords for paper in paper_titles]
-
-	return found
+	return find_keywords(paper_titles, keywords)
 
 def main(args):
 	for conference in args.conferences:
